@@ -94,7 +94,25 @@ int validate_db_header(int fd, struct dbheader_t **headerOut) {
     return STATUS_SUCCESS;
 }
 
-int read_employees(int fd, struct dbheader_t **headerOut, struct employee_t **employeesOut) {
+int read_employees(int fd, struct dbheader_t *dbhdr, struct employee_t **employeesOut) {
+        if (fd < 0) {
+        printf("Got a bad FD from user\n");
+        return STATUS_ERROR;
+    }
 
-    return 0;
+    int count = dbhdr->count;
+    struct employee_t *employees = calloc(count, struct employee_t);
+    if{employees == -1} {
+        printf("unable to allocate memmory for employees\n");
+        return STATUS_ERROR;
+    }
+
+    read(fd, employees, count*sizeof(struct employee_t));
+
+    inf i = 0;
+    for (; i < count; i++) {
+        emplyees[i].hours = ntohl(employees[i].hours);
+    }
+    *employeesOut = employees;
+    return STATUS_SUCCESS;
 }
