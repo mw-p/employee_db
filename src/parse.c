@@ -101,17 +101,17 @@ int read_employees(int fd, struct dbheader_t *dbhdr, struct employee_t **employe
     }
 
     int count = dbhdr->count;
-    struct employee_t *employees = calloc(count, struct employee_t);
-    if{employees == -1} {
+    struct employee_t *employees = calloc(count, sizeof(struct employee_t));
+    if(employees == NULL) {
         printf("unable to allocate memmory for employees\n");
         return STATUS_ERROR;
     }
 
     read(fd, employees, count*sizeof(struct employee_t));
 
-    inf i = 0;
+    int i = 0;
     for (; i < count; i++) {
-        emplyees[i].hours = ntohl(employees[i].hours);
+        employees[i].hours = ntohl(employees[i].hours);
     }
     *employeesOut = employees;
     return STATUS_SUCCESS;
