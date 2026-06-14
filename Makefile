@@ -5,7 +5,7 @@ OBJ = $(patsubst src/%.c, obj/%.o, $(SRC))
 run: clean default
 	rm -f ./db/*
 	./$(TARGET) -f ./db/mynewdb.db -n
-	./$(TARGET) -f ./db/mynewdb.db
+	./$(TARGET) -f ./db/mynewdb.db -a "Piotrus O.,123 Zadupie, 69"
 
 default: $(TARGET)
 

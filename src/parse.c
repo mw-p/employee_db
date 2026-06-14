@@ -9,20 +9,28 @@
 #include "common.h"
 #include "parse.h"
 
-void output_file(int fd, struct dbheader_t *dbheader){
+void output_file(int fd, struct dbheader_t *dbhdr, struct employee_t *employees){
     if (fd < 0) {
         printf("Got a bad FD from user\n");
         return;
     }
 
-    dbheader->magic = htonl(dbheader->magic);
-    dbheader->filesize = htonl(dbheader->filesize);
-    dbheader->count = htons(dbheader->count);
-    dbheader->version = htons(dbheader->version);
+    int realcount = dbhdr->count;
+
+    dbhdr->magic = htonl(dbhdr->magic);
+    dbhdr->filesize = htonl(dbhdr->filesize);
+    dbhdr->count = htons(dbhdr->count);
+    dbhdr->version = htons(dbhdr->version);
 
     lseek(fd, 0, SEEK_SET);
 
-    write(fd, dbheader, sizeof(struct dbheader_t));
+    write(fd, dbhdr, sizeof(struct dbheader_t));
+
+    int i = 0;
+    for(;i<realcount;i++){
+        employees[i].hours = htonl(employees[i].hours);
+        write(fd, &employees[i], sizeof(struct employee_t));
+    }
 
     return;
 
@@ -96,8 +104,8 @@ int validate_db_header(int fd, struct dbheader_t **headerOut) {
 
 int read_employees(int fd, struct dbheader_t *dbhdr, struct employee_t **employeesOut) {
         if (fd < 0) {
-        printf("Got a bad FD from user\n");
-        return STATUS_ERROR;
+            printf("Got a bad FD from user\n");
+            return STATUS_ERROR;
     }
 
     int count = dbhdr->count;
@@ -114,5 +122,18 @@ int read_employees(int fd, struct dbheader_t *dbhdr, struct employee_t **employe
         employees[i].hours = ntohl(employees[i].hours);
     }
     *employeesOut = employees;
+    return STATUS_SUCCESS;
+}
+
+int add_employee(struct dbheader_t *dbhdr, struct employee_t *employees, char *addstring){
+
+    char *name = strtok(addstring, ",");
+    char *addr = strtok(NULL, ",");
+    char *hours = strtok(NULL, ",");
+
+    strncpy(employees[dbhdr->count-1].name, name, sizeof(employees[dbhdr->count-1]).name);
+    strncpy(employees[dbhdr->count-1].address, addr, sizeof(employees[dbhdr->count-1]).address);
+    employees[dbhdr->count-1].hours = atoi(hours);
+
     return STATUS_SUCCESS;
 }
