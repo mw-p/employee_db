@@ -18,7 +18,7 @@ void output_file(int fd, struct dbheader_t *dbhdr, struct employee_t *employees)
     int realcount = dbhdr->count;
 
     dbhdr->magic = htonl(dbhdr->magic);
-    dbhdr->filesize = htonl(dbhdr->filesize);
+    dbhdr->filesize = htonl(sizeof(struct dbheader_t) + sizeof(struct employee_t)*realcount);
     dbhdr->count = htons(dbhdr->count);
     dbhdr->version = htons(dbhdr->version);
 
@@ -92,6 +92,7 @@ int validate_db_header(int fd, struct dbheader_t **headerOut) {
 
     struct stat dbstat = {0};
     fstat(fd, &dbstat);
+    printf("Header filesize: %d\nsbstat st_size: %d\nResult: %d\n", header->filesize, dbstat.st_size, header->filesize == dbstat.st_size);
     if (header->filesize != dbstat.st_size){
         printf("Corrupted database\n");
         free(header);
