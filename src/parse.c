@@ -9,6 +9,18 @@
 #include "common.h"
 #include "parse.h"
 
+void list_employees(struct dbheader_t *dbhdr, struct employee_t *employees){
+    int i = 0;
+    for (; i<dbhdr->count; i++){
+        printf("Employee %d\n", i);
+        printf("\tName: %s\n", employees[i].name);
+        printf("\tAddress: %s\n", employees[i].address);
+        printf("\tHours: %u\n", employees[i].hours);
+    }
+    
+    return;
+}
+
 void output_file(int fd, struct dbheader_t *dbhdr, struct employee_t *employees){
     if (fd < 0) {
         printf("Got a bad FD from user\n");
@@ -53,7 +65,7 @@ int create_db_header(int fd, struct dbheader_t **headerOut) {
     return STATUS_SUCCESS;
 }
 
-// my comment
+
 int validate_db_header(int fd, struct dbheader_t **headerOut) {
     if (fd < 0) {
         printf("Got a bad FD from user\n");
@@ -92,7 +104,7 @@ int validate_db_header(int fd, struct dbheader_t **headerOut) {
 
     struct stat dbstat = {0};
     fstat(fd, &dbstat);
-    printf("Header filesize: %d\nsbstat st_size: %d\nResult: %d\n", header->filesize, dbstat.st_size, header->filesize == dbstat.st_size);
+    printf("Header filesize: %d\nsbstat st_size: %ld\nResult: %d\n", header->filesize, dbstat.st_size, header->filesize == dbstat.st_size);
     if (header->filesize != dbstat.st_size){
         printf("Corrupted database\n");
         free(header);
@@ -126,15 +138,34 @@ int read_employees(int fd, struct dbheader_t *dbhdr, struct employee_t **employe
     return STATUS_SUCCESS;
 }
 
-int add_employee(struct dbheader_t *dbhdr, struct employee_t *employees, char *addstring){
+int add_employee(struct dbheader_t *dbhdr, struct employee_t **employees, char *addstring){
+
+    if (NULL == dbhdr) return STATUS_ERROR;
+    if (NULL == employees) return STATUS_ERROR;
+    if (NULL == *employees) return STATUS_ERROR;
+    if (NULL == addstring) return STATUS_ERROR;
 
     char *name = strtok(addstring, ",");
+    if (NULL == name) return STATUS_ERROR;
     char *addr = strtok(NULL, ",");
+    if (NULL == addr) return STATUS_ERROR;
     char *hours = strtok(NULL, ",");
+    if (NULL == hours) return STATUS_ERROR;
 
-    strncpy(employees[dbhdr->count-1].name, name, sizeof(employees[dbhdr->count-1]).name);
-    strncpy(employees[dbhdr->count-1].address, addr, sizeof(employees[dbhdr->count-1]).address);
-    employees[dbhdr->count-1].hours = atoi(hours);
+    struct employee_t *e = *employees;
+    e = realloc(e, sizeof(struct employee_t) * dbhdr->count+1);
+    if (e == NULL){
+        return STATUS_ERROR;
+    }
+
+    dbhdr->count++;
+
+    strncpy(e[dbhdr->count-1].name, name, sizeof(e[dbhdr->count-1].name)-1);
+    strncpy(e[dbhdr->count-1].address, addr, sizeof(e[dbhdr->count-1].address)-1);
+
+    e[dbhdr->count-1].hours = atoi(hours);
+
+    *employees = e;
 
     return STATUS_SUCCESS;
 }
